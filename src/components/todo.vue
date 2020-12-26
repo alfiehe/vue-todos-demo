@@ -13,7 +13,7 @@
 
       <h1 class="title-page">
         <span class="title-wrapper">{{todo.title}}</span> <!-- 标题-->
-        <span class="count-list">{{todo.count}}</span><!-- 数目-->
+        <span class="count-list">{{todo.count || 0}}</span><!-- 数目-->
       </h1>
 
       <!-- 右边的删除，锁定图标容器-->
@@ -52,13 +52,18 @@
     </nav>
 
     <div class="content-scrollable list-items">
-      <!--容器下半部分-->
+      <div v-for="(item, index) in items" :key="index">
+        <item :item="item"></item>
+      </div>
     </div>
 
   </div>
 </template>
 
 <script>
+import Item from './item'
+import { getTodo, addRecord } from '../api/api'
+
 export default {
   data () {
     return {
@@ -67,23 +72,53 @@ export default {
         count: 12,
         locked: false
       },
-      items: [ // 代办单项列表
-        { checked: false, text: '新的一天', isDelete: false },
-        { checked: false, text: '新的一天', isDelete: false },
-        { checked: false, text: '新的一天', isDelete: false }
-      ],
-      text: '' // 新增代办单项绑定的值
+      // 代办单项列表
+      items: [],
+      // 新增代办单项绑定的值
+      text: ''
     }
+  },
+  components: {
+    Item
+  },
+  watch: {
+    '$route.params.id' () {
+    // 监听$route.params.id的变化，如果这个id即代表用户点击了其他的待办项需要重新请求数据。
+      this.init()
+    }
+  },
+  created () {
+    // created生命周期，在实例已经创建完成，页面还没渲染时调用init方法。
+    this.init()
   },
   methods: {
     onAdd () {
-      this.items.push({
-        checked: false,
-        text: this.text,
-        isDelete: false
+      // 当用户输入文字，并且回车时调用次方法。
+      const ID = this.$route.params.id
+      addRecord({ id: ID, text: this.text }).then(res => {
+        this.text = ''
+        this.init() // 请求成功后初始化
       })
-      this.text = ''
+    },
+    init () {
+    // 获取到 $route下params下的id,即我们在menus.vue组件处传入的数据。
+      const ID = this.$route.params.id
+      getTodo({ id: ID }).then(res => {
+        console.log('===init===res===', res)
+        let { id, title, count, isDelete, locked, record
+        } = res.data.todo
+        // 请求成功，拿到res.data.todo;在将record 赋值到代办单项列表，其它数据赋值到todo对象
+        this.items = record
+        this.todo = {
+          id: id,
+          title: title,
+          count: count,
+          locked: locked,
+          isDelete: isDelete
+        }
+      })
     }
+
   }
 }
 </script>

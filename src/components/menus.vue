@@ -36,6 +36,14 @@ export default {
       this.activeId = TODOS[0].id
     })
   },
+  watch: {
+    'activeId' (id) {
+      this.$router.push({
+        name: 'Todo',
+        params: { id: id }
+      })
+    }
+  },
   methods: {
     handleChange (id) {
       this.activeId = id
@@ -44,7 +52,7 @@ export default {
       addTodo({}).then(data => {
         getTodoList({}).then(res => {
           const TODOS = res.data.todos
-          this.todoId = TODOS[TODOS.length - 1].id
+          this.activeId = TODOS[TODOS.length - 1].id
           this.items = TODOS
         })
       })
